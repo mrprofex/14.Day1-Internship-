@@ -1,46 +1,24 @@
-const express = require('express');
-const app = express();  //ask 
-const math = require("./module/math")
-const news = require("./dataset/news");
-const {searchByCategory: seCat, searchByCategory}=require("./module/util")
-const { resourceUsage } = require('node:process');
-// console.log(math.add(3,6));
-// console.log(math.sub(6,7));
+require("dotenv").config();
 
-app.listen(3000, ()=>{
-    console.log("your server is run in the http://localhost:3000")
-})
+const express = require("express");
+const cors = require("cors");
+const api = require("./config/prisma");
+const app = express();
 
-app.get("/", (req, res)=>{
-    res.send("hello, world");
-})
+app.use(cors());
+app.use(express.json());
 
-app.get("/about",(req, res)=>{
-    res.send("This is an about page")
-})
+app.get("/users", async (req, res) => {
+  const users = await api.user.findMany();
+  res.json(users);
+});
 
-//send all news 
-//1 news
+app.post("/users", async (req, res) => {
+  console.log(req.body);
+  const { email, name } = req.body;
+  const user = await api.user.create({ data: { email : email, name : name } });
+  res.status(201).json(user);
+});
 
-app.get("/news", (req, res)=>{
-    if(req.query.category){
-        console.log("Category:"+ req.query.category);
-        return res.send(seCat(req.query.category,news));
-    }
-    if (req.query.searchterm){
-        console.log("Search Term:"+ req.query.searchterm);
-        filternews = searchterm(req.query.searchterm,filternews);
-    }
-})
-
-
-
-//send new with id 
-app.get("/news/:id", (req, res)=>{
-    const id = req.params.id;
-    for (let i=0; i<=news.length;i++){
-        if (news[i].id==id){
-            return res.send(news[i]);
-        }
-    }return res.send("news not found")
-})
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`server on http://localhost:${PORT}`));
